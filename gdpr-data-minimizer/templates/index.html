@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>GDPR Text Minimizer</title>
+  <style>
+    :root {
+      --primary-color: #0078D7;
+      --note-color: #FFC107;
+      --box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+      --radius: 8px;
+      --font-family: 'Segoe UI', sans-serif;
+    }
+
+    body {
+      font-family: var(--font-family);
+      background-color: #f7f9fb;
+      color: #333;
+      margin: 0;
+      padding: 2rem;
+      max-width: 900px;
+      margin-inline: auto;
+    }
+
+    h1 {
+      color: var(--primary-color);
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    label {
+      font-weight: 600;
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 150px;
+      font-family: var(--font-family);
+      font-size: 1rem;
+      padding: 0.8rem;
+      border: 1px solid #ccc;
+      border-radius: var(--radius);
+      box-shadow: var(--box-shadow);
+    }
+
+    button {
+      background-color: var(--primary-color);
+      color: white;
+      border: none;
+      padding: 0.8rem 1.2rem;
+      font-size: 1rem;
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #005a9e;
+    }
+
+    .result-box {
+      margin-top: 2rem;
+      padding: 1.5rem;
+      border-radius: var(--radius);
+      box-shadow: var(--box-shadow);
+      background-color: #ffffff;
+    }
+
+    .section-title {
+      font-weight: bold;
+      margin-top: 1rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .redacted-text {
+      background-color: #f3f4f6;
+      padding: 1rem;
+      border-radius: var(--radius);
+      font-family: monospace;
+      white-space: pre-wrap;
+    }
+
+    .pii-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-top: 0.5rem;
+    }
+
+    .tag {
+      background-color: var(--note-color);
+      color: #333;
+      font-weight: bold;
+      padding: 0.4rem 0.8rem;
+      border-radius: 5px;
+      font-size: 0.85rem;
+    }
+  </style>
+</head>
+<body>
+  <h1>GDPR Text Minimizer</h1>
+
+  <div class="form-group">
+    <label for="text">Paste the text you'd like to anonymize:</label>
+    <textarea id="text" placeholder="Example: My name is John Doe and I live at 123 Main St..."></textarea>
+    <button id="minimize-btn">Minimize</button>
+  </div>
+
+  <div id="result-box" class="result-box" style="display: none;">
+    <div class="section-title">🔒 Redacted Text</div>
+    <div class="redacted-text" id="redacted-text"></div>
+
+    <div class="section-title">🔍 PII Detected</div>
+    <div class="pii-tags" id="pii-tags"></div>
+  </div>
+
+  <script>
+    const btn = document.getElementById('minimize-btn');
+    const textInput = document.getElementById('text');
+    const resultBox = document.getElementById('result-box');
+    const redactedEl = document.getElementById('redacted-text');
+    const piiTagsEl = document.getElementById('pii-tags');
+
+    btn.addEventListener('click', async () => {
+      const text = textInput.value.trim();
+      if (!text) {
+        alert("Please enter text to minimize.");
+        return;
+      }
+
+      resultBox.style.display = 'none';
+      redactedEl.textContent = 'Processing...';
+      piiTagsEl.innerHTML = '';
+      resultBox.style.display = 'block';
+
+      try {
+        const res = await fetch('/api/minimize', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text })
+        });
+
+        const data = await res.json();
+
+        if (data.error) {
+          redactedEl.textContent = "Error: " + data.error;
+          return;
+        }
+
+        redactedEl.textContent = data.redacted_text || '';
+        piiTagsEl.innerHTML = '';
+        (data.pii_found || []).forEach(tag => {
+          const span = document.createElement('span');
+          span.className = 'tag';
+          span.textContent = tag;
+          piiTagsEl.appendChild(span);
+        });
+      } catch (err) {
+        console.error(err);
+        redactedEl.textContent = "Error contacting minimizer service.";
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,130 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "GDPR Text Minimizer API",
+    "version": "1.0.0",
+    "description": "An API that detects and redacts personal identifiable information (PII) from text and returns anonymized content. Useful for GDPR compliance, data minimization, and secure AI processing."
+  },
+  "servers": [
+    {
+      "url": "/",
+      "description": "Local server"
+    }
+  ],
+  "paths": {
+    "/api/minimize": {
+      "post": {
+        "summary": "Minimize PII in text",
+        "description": "Redacts personal identifiable information (PII) from user-provided text. Also returns a list of PII types found.",
+        "requestBody": {
+          "description": "Text to analyze and redact",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "text": {
+                    "type": "string",
+                    "example": "Hi, my name is Clara Russo and I live at 14 Via Milano in Florence. You can reach me at +39 345 1234567 or clara@email.com."
+                  }
+                },
+                "required": ["text"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successfully minimized text",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "redacted_text": {
+                      "type": "string",
+                      "example": "Hi, my name is [NAME] and I live at [ADDRESS]. You can reach me at [PHONE] or [EMAIL]."
+                    },
+                    "pii_found": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "enum": ["NAME", "EMAIL", "PHONE", "ADDRESS", "CARD", "ID", "DATE", "ORGANIZATION", "PLATFORM"]
+                      },
+                      "example": ["NAME", "EMAIL", "PHONE"]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request (e.g., missing text)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Missing 'text' in request"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error (LLM failure, etc.)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Failed to process text"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health": {
+      "get": {
+        "summary": "Health check",
+        "description": "Returns basic health status of the service and its connection to the LLM backend.",
+        "responses": {
+          "200": {
+            "description": "Health status",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "healthy"
+                    },
+                    "llm_api": {
+                      "type": "string",
+                      "example": "ok"
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

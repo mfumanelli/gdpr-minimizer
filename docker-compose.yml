@@ -1,0 +1,29 @@
+services:
+  app:
+    container_name: gdpr-minimizer
+    build:
+      context: ./gdpr-data-minimizer
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      - PORT=8080
+      - LOG_LEVEL=INFO
+    env_file:
+      - .env
+    restart: unless-stopped
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    volumes:
+      - ./gdpr-data-minimizer:/app
+
+networks:
+  default:
+    name: gdpr-data-minimizer
+    driver: bridge

@@ -1,0 +1,19 @@
+# filepath: /gdpr-data-minimizer/.dockerignore
+# Git
+.git
+.gitignore
+
+# Binaries and build artifacts
+*.pyc
+*.pyo
+__pycache__/
+
+# macOS specific
+.DS_Store
+
+# Local development settings
+.env
+
+# IDE directories
+.idea/
+.vscode/
